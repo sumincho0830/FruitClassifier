@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "177483668552",
+    "project_id": "cancerclassifier",
+    "storage_bucket": "cancerclassifier.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177483668552:android:53bc0241a78ffd36b08c7d",
+        "android_client_info": {
+          "package_name": "com.sum.cancerclassification"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDskh5vSSUYGLVy7s5-KYGoi7JcNj1GbIY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
