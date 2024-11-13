@@ -212,8 +212,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        uri?.let { outputStream ->
-            contentResolver.openOutputStream(it).use { outputStream ->
+        uri?.let {
+            contentResolver.openOutputStream(it)?.use { outputStream ->
                 BitmapFactory.decodeFile(file.absolutePath).compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
             }
             values.clear()
