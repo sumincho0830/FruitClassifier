@@ -52,4 +52,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.google.firebase:firebase-database-ktx:20.2.1")
     implementation("com.google.firebase:firebase-core:21.1.1")
+    implementation("org.tensorflow:tensorflow-lite:2.10.0")
 }
