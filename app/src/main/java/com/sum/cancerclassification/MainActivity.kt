@@ -36,6 +36,18 @@ import java.nio.channels.FileChannel
 import java.io.File
 import java.util.Date
 
+/**
+ * TO DO's:
+ * * 사진 촬영 시 320 x 258 비율로 촬영 되도록 Preview 설정
+ */
+
+/**
+ * !ISSUES!
+ * * 모델 결괏값 반영 안되는 문제
+ * * 사진이 데이터베이스나 갤러리에 저장되지 않는 문제 -> log 확인하기
+ */
+
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
