@@ -49,6 +49,9 @@ About Dataset: 
 * Dataset was collected under relatively unconstrained conditions.
 * room lights, room lights off,, closed windows, open window curtains, closed curtains
 * different camera angles with different weight in intelligent weight machine near to the
+* 15 kind of fruits
+* 5 different categories
+* 15 folders and several sub-categories for each
 
 
 # III. Methodology
