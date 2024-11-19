@@ -1,10 +1,12 @@
 # 모바일 카메라를 활용한 과일 분류기
+양인호 
+조수민 국제학부 2020031849 
 
 [I. Proposal<br>](#proposal)
 [II. Datasets<br>](#datasets)
 [III. Methodology<br>](#methodology)
 [IV. Evaluation & Analysis<br>](#evaluation&analysis)
-[V. Related Work<br>](#related work)
+[V. Related Work<br>](#related_work)
 [VI. Coclusion & Discussion<br>](#conclusion&discussion)
 
 # I. Proposal
