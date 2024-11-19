@@ -29,6 +29,27 @@
 
 # II. Dataset
 [Kaggle Fruit Recognition Dataset][dataset]
+![image](https://github.com/user-attachments/assets/4d660303-2c10-4eff-9e3a-cdb96842fbd5)
+
+About Dataset: 
+* 44406 fruit images
+* collected in a period of 6 months
+* clear background
+* 320x258 pixels
+* image taken with HD Logitech web camera
+* different environments manually created to mimic various natural circumstances
+* different light, shadow, sunshine, pose variation -> commonly seen in supermarkets or fruit shops
+* cope with illumination variation, camera capturing artifacts, specular reflection shading and shadows to make model more robust
+* All images stored in RGB color-space at 8bit per channel.
+* images were gathered at various day times of the and in different days for the same category.
+* These features increase the dataset variability and represent more realistic scenario.
+* The image had large variation in quality and lighting. Illumination is one of those variations in imagery.
+* In fact, illumination can make two images of same fruit less similar than two images of different kind of fruits.
+* A custom intelligent weight machine and camera was used to capture all images.
+* Dataset was collected under relatively unconstrained conditions.
+* room lights, room lights off,, closed windows, open window curtains, closed curtains
+* different camera angles with different weight in intelligent weight machine near to the
+
 
 # III. Methodology
 
