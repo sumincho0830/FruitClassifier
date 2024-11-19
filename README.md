@@ -26,6 +26,7 @@ VI. Coclusion & Discussion<br>
 안드로이드 개발: Android Studio를 사용하여 앱 개발, 카메라로 실시간 과일 분류 가능하게 구현
 
 # II. Dataset
+[Kaggle Fruit Recognition Dataset][data]
 
 # III. Methodology
 
@@ -34,3 +35,5 @@ VI. Coclusion & Discussion<br>
 # V. Related Work
 
 # VI. Coclusion & Discussion
+
+[dataset]: https://www.kaggle.com/datasets/chrisfilo/fruit-recognition
