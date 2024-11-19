@@ -2,12 +2,12 @@
 양인호 
 조수민 국제학부 2020031849 
 
-[I. Proposal<br>](#proposal)
-[II. Datasets<br>](#datasets)
-[III. Methodology<br>](#methodology)
-[IV. Evaluation & Analysis<br>](#evaluation&analysis)
-[V. Related Work<br>](#related_work)
-[VI. Coclusion & Discussion<br>](#conclusion&discussion)
+[I. Proposal](#i-proposal)<br>
+[II. Dataset](#ii-dataset)<br>
+[III. Methodology](#iii-methodology)<br>
+[IV. Evaluation & Analysis](#iv-evaluation--analysis)<br>
+[V. Related Work](#v-related-work)<br>
+[VI. Conclusion & Discussion](#vi-conclusion--discussion)
 
 # I. Proposal
 
