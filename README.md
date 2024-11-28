@@ -1,60 +1,45 @@
-# 모바일 카메라를 활용한 과일 분류기
-양인호 <br>
+# 모바일 카메라를 활용한 킥보드 불법 주정차 판별
+양인호 정보공학전공 2021074220<br>
 조수민 국제학부 2020031849 
+
+### 목차
 
 [I. Proposal](#i-proposal)<br>
 [II. Dataset](#ii-dataset)<br>
 [III. Methodology](#iii-methodology)<br>
 [IV. Evaluation & Analysis](#iv-evaluation--analysis)<br>
 [V. Related Work](#v-related-work)<br>
-[VI. Conclusion & Discussion](#vi-conclusion--discussion)
+[VI. Conclusion & Discussion](#vi-conclusion--discussion)<br>
 
 # I. Proposal
-
-### **1. 프로젝트 개요**
-본 프로젝트는 이미지 분류 분야에서 높은 성능을 보이는 ResNet(Residual Networks) 모델을 사용하여 딥러닝 모델에서 발생하는 기울기 소실 문제를 해결하고 80% 이상의 정확도를 달성하는 것을 목표로 합니다. 이와 같은 모델은 바코드 없는 상품 분류 및 계산, 농산물 품질 분류, TTS등의 기술과 결합한 시각장애인용 식별 기능, 자동화 로봇 탑재용 모델 등 향후 다양한 분야에서 활용될 수 있을 것으로 기대됩니다. 
-
-### **2. 프로젝트 목표**<br>
-* **과일 분류 모델 개발**: ResNet 기반의 과일 분류 모델을 설계하고 훈련하여, 다양한 과일 종류를 높은 정확도로 분류합니다.<br>
-* **데이터셋 구성**: 오렌지, 사과, 바나나, 딸기 등 일반적으로 소비되는 과일의 이미지로 구성된 학습 데이터셋을 사용합니다.<br>
-* **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 데이터 증강 기법을 통해 모델의 정확도를 최대화합니다.<br>
-* **안드로이드 앱 통합**: 훈련된 모델을 TFLite 형식으로 변환하여 안드로이드 환경에서 사용할 수 있는 과일 분류 프로그램을 개발합니다.<br>
-
-### **3. 사용 기술 및 도구**<br>
-* **프레임워크**: TensorFlow 및 PyTorch (모델 학습에 사용)<br>
-* **모델 구조**: ResNet-50, ResNet-101 등 다양한 ResNet 아키텍처를 실험하여 최적 성능을 도출합니다.<br>
-* **데이터 전처리**: 이미지 크기 조정, 색상 보정 및 데이터 증강 기술 (회전, 확대, 축소 등) 사용<br>
-* **모델 변환**: TFLite를 사용하여 안드로이드에 최적화된 모델 형식으로 변환<br>
-* **안드로이드 개발**: Android Studio를 사용하여 앱 개발, 카메라로 실시간 과일 분류 가능하게 구현<br>
+<p>
+최근 전동 킥보드의 불법 주차로 인한 시민 불편 사례가 증가하고 있으며, 이는 공공 안전과 재산 피해의 주요 원인으로 작용하고 있습니다. 특히, 시각장애인용 보도 블록 위에 주차된 킥보드, 좁은 골목이나 인도에 사선으로 주차되어 통행을 방해하는 사례는 보행자와 차량 운전자의 안전을 위협할 뿐만 아니라 자동차 손상 등 재산상의 손해를 초래할 수 있습니다. 그러나 이러한 문제를 효과적으로 규제하거나 해결할 수 있는 명확한 방안은 현재 마련되어 있지 않은 상황입니다.
+ </p>
+ <p>
+현행 신고 시스템은 신고자가 사진을 촬영하여 제출하고 관리자가 이를 확인하는 방식으로 이루어지고 있으나, 신고 과정에 많은 시간이 소요되고 개개인의 판단 기준이 명확하지 않아 원활한 신고와 관리가 어렵다는 한계점이 있습니다.
+  </p>
+<p>
+이에 본 프로젝트는 시민이 동일한 기준을 바탕으로 불법 주차된 킥보드를 신속하고 정확하게 판별하고 신고할 수 있는 시스템을 구축하여, 신고와 관리의 활성화를 도모하고자 합니다. 이를 통해 공공 안전을 증진하고 불법 주차 문제를 체계적으로 해결하는 데 기여하는 것을 목표로 합니다.
+또한, 본 모델델은 바코드 없는 상품 분류 및 계산, 텍스트 음성 변환(TTS) 기술과 결합한 시각장애인용 식별 기능, 자동화 로봇에 탑재 가능한 모델 등 향후 다양한 분야에서 활용될 수 있을 것으로 기대됩니다. 
+</p>
 
 # II. Dataset
-[Kaggle Fruit Recognition Dataset][dataset]
-![image](https://github.com/user-attachments/assets/4d660303-2c10-4eff-9e3a-cdb96842fbd5)
-
-About Dataset: 
-* 44406 fruit images
-* collected in a period of 6 months
-* clear background
-* 320x258 pixels
-* image taken with HD Logitech web camera
-* different environments manually created to mimic various natural circumstances
-* different light, shadow, sunshine, pose variation -> commonly seen in supermarkets or fruit shops
-* cope with illumination variation, camera capturing artifacts, specular reflection shading and shadows to make model more robust
-* All images stored in RGB color-space at 8bit per channel.
-* images were gathered at various day times of the and in different days for the same category.
-* These features increase the dataset variability and represent more realistic scenario.
-* The image had large variation in quality and lighting. Illumination is one of those variations in imagery.
-* In fact, illumination can make two images of same fruit less similar than two images of different kind of fruits.
-* A custom intelligent weight machine and camera was used to capture all images.
-* Dataset was collected under relatively unconstrained conditions.
-* room lights, room lights off,, closed windows, open window curtains, closed curtains
-* different camera angles with different weight in intelligent weight machine near to the
-* 15 kind of fruits
-* 5 different categories
-* 15 folders and several sub-categories for each
-
+* **불법 주차 분류 기준**: 사람이나 자전거 등의 통행에 현저하게 방해가 될 가능성이 있는 위치에 주차되어 있는 킥보드를 **불법**으로, 벽에 가깝게 주차되어 있거나 통행로를 크게 침해하지 않는 킥보드를 **정석**으로 규정하였습니다.
+* **데이터 수집 방법**:
+* * 사용 기기: 휴대폰 카메라 (갤럭시 노트20)
+  * 이미지 촬영 기준: 휴대폰 카메라의 3x3 격자의 중하부에 킥보드가 위치하도록 촬영
+  * 데이터 수: 약 200장의 이미지를 수집한 뒤 모델의 성능 개선을 위하여 100장 중복 (총 300장)
 
 # III. Methodology
+
+### **1. 사용 기술 및 도구**<br>
+* **모델**: 이미지 분류 분야에서 높은 성능을 보이는 ResNet(Residual Networks) 모델을 사용하여 딥러닝 모델에서 발생하는 기울기 소실 문제를 해결하고 80% 이상의 정확도를 달성하였습니다.<br> 
+* **안드로이드 앱**: 코틀린 기반의 안드로이드 앱에 TFLite 모듈을 접목하여 실시간으로 촬영 및 판별이 가능하도록 하였습니다.<br>
+
+### **2. 개발 과정**<br>
+1.  **데이터 전처리**: 모델 학습에 적절한 224px * 224px의 크기로 이미지 변환한 뒤 3차원 벡터 형태로 처리합니다. <br>
+2.  **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정을 통해 모델의 정확도를 최대화합니다.<br>
+
 
 # IV. Evaluation & Analysis
 
@@ -62,4 +47,3 @@ About Dataset: 
 
 # VI. Coclusion & Discussion
 
-[dataset]: https://www.kaggle.com/datasets/chrisfilo/fruit-recognition
