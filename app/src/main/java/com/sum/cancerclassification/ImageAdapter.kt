@@ -20,7 +20,7 @@ class ImageAdapter(private val images: List<MainActivity.ImageInfo>): //생성 �
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
         val imageInfo = images[position]
-        holder.probabilityText.text = imageInfo.probability
+        holder.probabilityText.text = imageInfo.classification
         holder.dateText.text = imageInfo.date
         holder.imageView.setImageURI(Uri.fromFile(File(imageInfo.imagePath)))
 

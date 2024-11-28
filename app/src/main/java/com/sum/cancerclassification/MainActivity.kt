@@ -1,13 +1,14 @@
 package com.sum.cancerclassification
 
 import android.app.Activity
-import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -16,282 +17,160 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
 import com.sum.cancerclassification.databinding.ActivityMainBinding
-
-import org.tensorflow.lite.Interpreter
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import android.content.res.AssetFileDescriptor
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import java.nio.channels.FileChannel
+import org.pytorch.*
 import java.io.File
-import java.util.Date
-
-/**
- * TO DO's:
- * * 사진 촬영 시 320 x 258 비율로 촬영 되도록 Preview 설정
- */
-
-/**
- * !ISSUES!
- * * 모델 결괏값 반영 안되는 문제
- * * 사진이 데이터베이스나 갤러리에 저장되지 않는 문제 -> log 확인하기
- */
-
+import java.io.FileOutputStream
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
+    private val TAG = "MainActivity"
 
     private lateinit var binding: ActivityMainBinding
     private val REQUEST_CAMERA_PERMISSION = 100
-
     val REQUEST_IMAGE_CAPTURE = 1
-    val FILE_NAME = "photo.jpg"
     lateinit var photoFile: File
 
-    /** imageList to be changed later */
     val imageList = mutableListOf<ImageInfo>()
-    var adapter = ImageAdapter(imageList)
+    val adapter = ViewPagerAdapter(imageList) {
+        Toast.makeText(this, "Image deleted successfully.", Toast.LENGTH_SHORT).show()
+    }
 
+    private lateinit var modelProcessor: PyTorchModelProcessor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
         FirebaseApp.initializeApp(this)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Set up RecyclerView with the adapter and Layout Manager
-        val recyclerView = binding.recyclerView // Assuming recyclerView is in activity_main
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = adapter
+        val viewPager = binding.viewPager
+        viewPager.adapter = adapter
 
-        val floatingActionButton = binding.floatingActionButton
-        floatingActionButton.setOnClickListener{
+        // Initialize PyTorchModelProcessor and Load model
+        modelProcessor = PyTorchModelProcessor(this)
+        try{
+            modelProcessor.loadModel("kickboard_model.ptl") // Model file in assets
+            Toast.makeText(this, "Model loaded successfully!", Toast.LENGTH_SHORT).show()
+        }catch (e: Exception){
+            Log.d(TAG, "Error loading model: ${e.message}")
+            Toast.makeText(this, "Failed to load model: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.floatingActionButton.setOnClickListener {
             checkCameraPermissionAndOpenCamera()
         }
 
-//        val floatingActionButton.setOnClickListener(object: View.OnClickListener{
-//            override fun onClick(v: View?) {
-//                TODO("Not yet implemented")
-//            }
-//        })
-
         loadImageFromFirebase()
-
     }
 
-    private fun checkCameraPermissionAndOpenCamera(){
-        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+
+    private fun checkCameraPermissionAndOpenCamera() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             openCamera()
-        }else{
-            // Request the camera permission
-            ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.CAMERA),
+                REQUEST_CAMERA_PERMISSION
+            )
         }
     }
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray,
-        deviceId: Int
+        grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
-        if(requestCode == REQUEST_CAMERA_PERMISSION){
-            if(grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)){
-                // Permission was granted, open the camera
-                openCamera()
-            }else{
-                // Permission denied
-                Toast.makeText(this, "Camera permission is required to use the camera", Toast.LENGTH_SHORT).show()
-            }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CAMERA_PERMISSION && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            openCamera()
+        } else {
+            Toast.makeText(this, "Camera permission is required to use the camera", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun openCamera(){
+    private fun openCamera() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        photoFile = getPhotoFile(createFileName()) //file path (saved in a File object)
+        photoFile = getPhotoFile(createFileName())
 
-        val fileProvider = FileProvider.getUriForFile(this,"com.sum.fruitclassifier.fileprovider", photoFile)
+        val fileProvider = FileProvider.getUriForFile(this, "com.sum.cancerclassification.fileprovider", photoFile)
         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider)
 
-        if(takePictureIntent.resolveActivity(packageManager)!= null){
+        if (takePictureIntent.resolveActivity(packageManager) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
         }
     }
 
-    private fun createFileName(): String{
-        val date:String = Utils.fileFormat.format(Date())
-        return "pred_"+date
+    private fun createFileName(): String {
+        val date = Utils.fileFormat.format(Date())
+        return "pred_$date"
     }
 
-    private fun getPhotoFile(fileName:String):File{
-        val storageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+    private fun getPhotoFile(fileName: String): File {
+        val storageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File(storageDirectory, "$fileName.jpg")
     }
 
-    // Add Camera Preview?
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK){
-            saveImageWithInfo(photoFile) //if Image captured successfully, save it to the preset path
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            saveImageWithInfo(photoFile)
         }
     }
 
-    data class ImageInfo(val imagePath: String = "", val probability: String = "", val date:String = "")
+    private fun saveImageWithInfo(file: File) {
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
 
-
-
-    fun saveImageWithInfo(file:File){
-        /** Incorporating Prediction Model:
-         * 1. Load image as bitmap from file.path
-         * 2. Preprocess image for model input (call preprocessImage())
-         * 3. Set output buffer
-         * 4. Run model Interpreter interface
-         * */
-
-        // Initialize the interpreter
-        val interpreter : Interpreter
-        try{
-            interpreter = Interpreter(loadModelFile())
-        }catch (e:Exception){
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to load model", Toast.LENGTH_SHORT).show()
+        val classificationResult: String
+        try {
+            // Classification result
+            classificationResult = modelProcessor.classifyImage(bitmap)
+        } catch (e: IllegalStateException) {
+            Toast.makeText(this, "Model not initialized. Cannot classify image.", Toast.LENGTH_SHORT).show()
             return
         }
+        val date: String = Utils.dateFormat.format(Date())
+        val imageInfo = ImageInfo(file.path, classificationResult, date)
 
-        /** 1. */
-        val imageBitmap: Bitmap = BitmapFactory.decodeFile(file.absolutePath)
-
-        /** 2. */
-        val inputBuffer = preprocessImage(imageBitmap)
-
-        /** 3. */
-        // Array(1) -> batch size
-        // FloatArray(2) -> inner array size 1 holds the confidence score or probability for the "orange" class
-        val output = Array(1) {FloatArray(1)} // adjust numClasses for your model's output
-        // classification model outputs a single array with scores for each class.
-        // After running the model, output[0][0] will contain a single float value.
-        // This vlaue typically represents the confidence that the input image is an "orange"
-
-        /** 4. */
-        interpreter.run(inputBuffer, output)
-
-        val confidence = output[0][0]
-        val date:String = Utils.dateFormat.format(Date())
-        /** Data Saved Here */
-        val imageInfo = ImageInfo(file.path, confidence.toString(), date)
+        // Save result to list
         imageList.add(imageInfo)
 
         // Notify RecyclerView to update
         adapter.notifyDataSetChanged()
 
-
-        // stores the index of the class with the highest confidence score
-        // val predictedLabelIndex = output[0].indexOf(output[0].maxOrNull()!!)
-
-
         // Save to Firebase Database
         val database = FirebaseDatabase.getInstance()
-        val myRef = database.getReference("images").push() //Each image gets a unique ID
-        myRef.setValue(imageInfo) // Save image data with path, probability, and date
-
-        /** Save imge to gallery as MediaStore*/
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, file.name)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES) // Makes it appear in the gallery
-        }
-
-        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        uri?.let {
-            contentResolver.openOutputStream(it)?.use { outputStream ->
-                BitmapFactory.decodeFile(file.absolutePath).compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-            }
-            values.clear()
-            values.put(MediaStore.Images.Media.IS_PENDING, 0)
-            contentResolver.update(uri, values, null, null)
-        }
-
+        val myRef = database.getReference("images").push()
+        myRef.setValue(imageInfo)
     }
 
-    private fun loadImageFromFirebase(){
+
+    private fun loadImageFromFirebase() {
         val database = FirebaseDatabase.getInstance()
-        val imageRef = database.getReference("images") // get reference to the images node
+        val imageRef = database.getReference("images")
 
-        imageRef.addValueEventListener(object: ValueEventListener{
+        imageRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // clear current list to avoid duplication
                 imageList.clear()
-
-                // Loop through each child in the "images" node
-                for(imageSnapshot in snapshot.children){
-                    // Convert each child to an ImageInfo object
-                    val imageInfo = imageSnapshot.getValue(ImageInfo::class.java) // get value as an ImageInfo object
-                    imageInfo?.let {imageList.add(it)} // add imageList to info
+                for (imageSnapshot in snapshot.children) {
+                    val imageInfo = imageSnapshot.getValue(ImageInfo::class.java)
+                    imageInfo?.let { imageList.add(it) }
                 }
-
-                // Notify RecyclerView to update
                 adapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle possible errors
                 Toast.makeText(this@MainActivity, "Failed to load data.", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
-    // funtion to load the model file from assets
-    fun loadModelFile(): ByteBuffer {
-        val assetFileDescriptor: AssetFileDescriptor = assets.openFd("fruit_classifier_model.tflite")
-        val fileinputStream = assetFileDescriptor.createInputStream()
-        val fileChannel = fileinputStream.channel
-        val startOffset = assetFileDescriptor.startOffset
-        val declaredLength = assetFileDescriptor.declaredLength
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-    }
-
-
-
-    // Prepare input data (assuming you have an image in Bitmap format)
-    fun preprocessImage(image:Bitmap): ByteBuffer{
-        val inputImageBuffer = ByteBuffer.allocateDirect(4 * 320 * 258 * 3) // 4 bytes per float
-        inputImageBuffer.order(ByteOrder.nativeOrder())
-
-        // resize the taken photo to 320x258 (keep size compatible from the beginning)
-        val resizedImage = Bitmap.createScaledBitmap(image, 320, 258, true)
-        for(y in 0 until 258){
-            for(x in 0 until 320){
-                val pixel = resizedImage.getPixel(x, y)
-                inputImageBuffer.putFloat((pixel shr 16 and 0xFF)/255.0f) // Red
-                inputImageBuffer.putFloat((pixel shr 8 and 0xFF)/255.0f) // Green
-                inputImageBuffer.putFloat((pixel and 0xFF)/255.0f) // Blue
-            }
-        }
-        return inputImageBuffer
-    }
-
-
-
+    data class ImageInfo(val imagePath: String = "", val classification: String = "", val date: String = "")
 }

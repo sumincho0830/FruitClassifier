@@ -16,6 +16,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     buildTypes {
@@ -38,6 +42,12 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    sourceSets{
+        getByName("main"){
+            assets.srcDirs("src/main/assets")
+        }
+    }
 }
 
 dependencies {
@@ -52,5 +62,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.google.firebase:firebase-database-ktx:20.2.1")
     implementation("com.google.firebase:firebase-core:21.1.1")
-    implementation("org.tensorflow:tensorflow-lite:2.10.0")
+
+    implementation("org.pytorch:pytorch_android:1.10.0")
+    implementation("org.pytorch:pytorch_android_torchvision:1.10.0")
+
+
+
 }

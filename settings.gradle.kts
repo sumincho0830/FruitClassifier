@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FruitClassifier"
+rootProject.name = "KickboardClassifier"
 include(":app")
  
