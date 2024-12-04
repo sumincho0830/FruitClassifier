@@ -218,6 +218,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 print("Training started...")
 train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=30)
 ```
+![스크린샷 2024-12-04 195245](https://github.com/user-attachments/assets/a395c91b-9a0d-4bf5-bcf4-e5eac6d38bdd)
 
 ### **9. 모델 저장**<br>
 
@@ -301,7 +302,6 @@ for image_name in os.listdir(image_dir):
             print(f"이미지 {image_name} 처리 중 오류 발생: {e}")
 
 ```
-![스크린샷 2024-12-04 195245](https://github.com/user-attachments/assets/a395c91b-9a0d-4bf5-bcf4-e5eac6d38bdd)
 ![image](https://github.com/user-attachments/assets/ec633b8b-5547-430c-ab97-61743484d8e0)
 
 
