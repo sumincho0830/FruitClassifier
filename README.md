@@ -337,9 +337,9 @@ plt.show()
 학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)** 가능성을 확인할 수 있습니다.
 
 ### 3. Grad-CAM을 활용한 분류 결과 시각화
-Grad-CAM(Gradient-weighted Class Activation Mapping)은 딥러닝 모델이 이미지 분류 시 어떤 부분에 주목했는지를 시각적으로 보여줌으로써 예측 결과를 신뢰할 수 있는 시각적 증거를 제공합니다. 이런 특징으 모델의 투명성과 디버깅을 위한 도구로 사용됩니다.
+Grad-CAM(Gradient-weighted Class Activation Mapping)은 딥러닝 모델이 이미지 분류 시 어떤 부분에 주목했는지를 시각적으로 보여줌으로써 예측 결과를 신뢰할 수 있는 시각적 증거를 제공합니다. 이런 특징은 모델의 투명성과 디버깅을 위한 도구로 사용됩니다.
 
-**3-1. Grad-CAM 클래스 정의**
+**3-1. Grad-CAM 클래스 정의**<br>
 * register_forward_hook: 모델의 forward pass 중 특정 층의 출력(feature map)을 저장.
 * register_backward_hook: backward pass 중 특정 층의 기울기(gradient)를 저장.
 * generate_cam: 저장된 feature map과 gradient를 사용해 활성화 맵(CAM)을 생성.
@@ -364,7 +364,7 @@ class GradCAM:
         # Grad-CAM 활성화 맵 생성 과정 (생략)
 
 ```
-**3-2. 모델 로드 및 Grad-CAM 설정**
+**3-2. 모델 로드 및 Grad-CAM 설정**<br>
 * 모델의 마지막 합성곱 층(layer4[2].conv2)을 Grad-CAM 대상 층으로 지정.
 * Grad-CAM 클래스의 인스턴스를 생성하여 활성화 맵 생성 준비.
 * 기울기와 feature map의 가중합을 통해 활성화 맵 생성.
@@ -384,7 +384,7 @@ target_layer = model.layer4[2].conv2  # ResNet34의 마지막 합성곱 층
 grad_cam = GradCAM(model, target_layer)
 
 ```
-**3-3. Grad-CAM 활성화 맵 생성 및 시각화**
+**3-3. Grad-CAM 활성화 맵 생성 및 시각화**<br>
 * Grad-CAM 활성화 맵을 생성하기 위해 모델이 예측한 클래스(class_idx)를 사용.
 * 선택된 클래스의 예측값에 대해 backward를 호출하여 기울기(gradient)를 계산.
 ```python
@@ -442,7 +442,7 @@ for image_name in os.listdir(image_dir):
 # VI. Adding PyTorch Model to Android App
 검증이 완료된 모델은 PyTorch 모듈로 변환하여 안드로이드 앱에서 촬영한 이미지를 판별할 수 있도록 접목합니다. 
 ### 1. TorchScript 모듈 변환 및 저장
-**1-1. CPU기반 환경에 적합하도록 모델 변환** 
+**1-1. CPU기반 환경에 적합하도록 모델 변환** <br>
 CPU기반 환경인 모바일 앱에서는 GPU를 사용하는 CUDA 연산을 지원하지 않기 때문에 모델과 데이터(가중치 및 버퍼)를 명시적으로 CPU를 사용하도록 변환해줍니다. 
 ```python
 model.to('cpu') # 모델을 CPU를 사용하도록 설정
@@ -451,13 +451,13 @@ for param in model.parameters():
 for buffer in model.buffers(): 
     buffer.data = buffer.data.cpu() 
 ```
-**1-2. TorchScript 모델 저장** 
+**1-2. TorchScript 모델 저장** <br>
 PyTorch 모델을 TorchScript 형식으로 변환한 후, CPU에서 실행 가능하도록 저장합니다.
 ```python
 scripted_model = torch.jit.script(model.cpu())
 scripted_model.save("binary_resnet34_cpu.pt")
 ```
-**1-3. PyTorch 모델 최적화 및 내보내기** 
+**1-3. PyTorch 모델 최적화 및 내보내기** <br>
 모바일 환경에서 효율적인 실행을 위해 모델을 최적화 한 뒤 <code>.ptl</code>형식으로 저장하여 PyTorch Lite Interpreter에서 사용할 수 있도록 합니다. 
 ```python
 from torch.utils.mobile_optimizer import optimize_for_mobile
@@ -467,23 +467,125 @@ optimized_model = optimize_for_mobile(scripted_model)
 optimized_model._save_for_lite_interpreter("binary_resnet34_cpu.ptl")
 ```
 
-### 2. 앱 내에서 이미지 전처리 및 테스트
-**2-1. 앱에 모듈 추가**
+### 2. 안드로이드 앱에 모델 연결
+**2-1. 프로젝트에 모델 추가**<br>
 안드로이드 프로젝트 생성 후 app/main/assets 폴더를 생성한 뒤 모델을 추가합니다.
 ![image](https://github.com/user-attachments/assets/489b97c2-7145-49d5-ae01-b8350a8df9e8)
 <br>
 
-**2-2. PyTorch 디펜던시 추가**
+**2-2. PyTorch 디펜던시 추가**<br>
+자동 생성된 <code>build.gradle</code>(App) 파일에 PyTorch 모델을 인식하고 사용할 수 있게 하는 라이브러리를 추가합니다.
 ```kotlin
+
+android {
+//...
+    sourceSets{
+            getByName("main"){
+                assets.srcDirs("src/main/assets") // PyTorch모델 사용 설정
+            }
+        }
+}
+
+//...
+
 dependencies {
     //...
     implementation("org.pytorch:pytorch_android:1.10.0")
     implementation("org.pytorch:pytorch_android_torchvision:1.10.0")
 }
 ```
+**2-2. 이미 전처리 및 모델 활용**<br>
+모델 로딩과 이미지 분류 메서드를 포함하는 <code>PyTorchModelProcessor</code> 클래스를 생성합니다.
+```kotlin
+class PyTorchModelProcessor(private val context:Context) {
+    private val TAG = "PyTorchModelProcessor"
+    private lateinit var model:Module
+
+    // 모델 로드
+    fun loadModel(assetName: String){
+        try {
+            val modelPath = assetFilePath(context, assetName)
+            model = Module.load(modelPath)
+        }catch (e:Exception){
+            Log.d(TAG, "Failed to load model.")
+            throw RuntimeException("Failed to load model: ${e.message}")
+        }
+    }
+
+    // 이미지 전처리 및 분류
+    fun classifyImage(bitmap: Bitmap): String{
+        Log.d(TAG, "classifyImage()")
+
+        // 모델이 잘 초기화 되었는지 확인
+        if (!::model.isInitialized) {
+            throw IllegalStateException("Model has not been initialized. Make sure to call loadModel() first.")
+        }
+
+        // Bitmap 이미지 크기 조정, 정규화 및 텐서 변환
+        val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
+            Bitmap.createScaledBitmap(bitmap, 224, 224, true),
+            floatArrayOf(0.485f, 0.456f, 0.406f), // Normalize mean
+            floatArrayOf(0.229f, 0.224f, 0.225f)  // Normalize std
+        )
+        val inputData = inputTensor.dataAsFloatArray
+        Log.d(TAG, "Input Tensor: First 10 values: ${inputData.take(10).joinToString()}")
+        Log.d(TAG, "Input Tensor: Size: ${inputData.size}")
 
 
+        // 모델 실행
+        val outputTensor = model.forward(IValue.from(inputTensor)).toTensor()
+        Log.d(TAG, "classifyImage: outputTensor[0] ${outputTensor.dataAsFloatArray[0]}")
+        Log.d(TAG, "Output tensor shape: ${outputTensor.shape().contentToString()}")
 
-# VII. Coclusion & Discussion
+
+        // 텐서로 출력된 결괏값
+        val scores = outputTensor.dataAsFloatArray
+        Log.d(TAG, "classifyImage: scores[0] ${scores[0]}")
+        Log.d(TAG, "classifyImage: scores.size ${scores.size}")
+        val score = scores[0]
+        Log.d(TAG, "classifyImage: score $score")
+        
+        // Sigmoid function
+        val probability = 1 / (1 + Math.exp(-score.toDouble()))
+        Log.d(TAG, "classifyImage: probability $probability")
+
+        // 분류 결과를 반환
+        return if(probability > 0.5) "불법" else "정석"
+    }
+
+    // Helper to copy model from assets to internal storage
+    private fun assetFilePath(context: Context, assetName: String): String{
+        val file = File(context.filesDir, assetName)
+        if(!file.exists()){
+
+            try{
+                Log.d(TAG, "Copying $assetName to internal storage")
+                context.assets.open(assetName).use { inputStream ->
+                    FileOutputStream(file).use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                Log.d(TAG, "File copied to ${file.absolutePath}")
+            }catch (e: Exception) {
+                Log.d(TAG, "Failed to copy asset file")
+                throw RuntimeException("Failed to copy asset file: $assetName", e)
+            }
+        }else{
+            Log.d(TAG, "File already exists at ${file.absoluteFile}        ")
+        }
+        return file.absolutePath
+    }
+}
+```
+필요한 곳에 <code>PyTorchModelProcessor</code> 인스턴스를 생성하고 용도에 맞게 사용합니다.
+```kotlin
+private lateinit var modelProcessor: PyTorchModelProcessor
+modelProcessor = PyTorchModelProcessor(this) # Context를 전달하여 인스턴스 초기화
+modelProcessor.loadModel("binary_resnet34_cpu.ptl") # 모델 가져오기
+classificationResult = modelProcessor.classifyImage(bitmap) # 이진 분류 결과 받기
+```
+
+
+# VII. Conclusion & Discussion
 
 위와 같은 과적합 현상의 여러 가장 큰 요인은 데이터 부족으로 판단됩니다. 현재 사용된 약 300장의 데이터로는 학습에 한계가 있으나, 수만 장 이상의 데이터를 확보하여 학습을 진행하면 성능 개선을 기대할 수 있을 것으로 보입니다.
