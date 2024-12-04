@@ -334,7 +334,7 @@ plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/78b1eafc-049d-4a27-9a91-82faf08d02a5)
 <br>
-학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)** 가능성을 확인할 수 있습니다.
+학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)** 가능성을 확인할 수 있었습니다. 이는 데이터 수와 데이터 다양성을 확보함으로써 개선될 수 있다고 생각됩니다.
 
 ### 3. Grad-CAM을 활용한 분류 결과 시각화
 Grad-CAM(Gradient-weighted Class Activation Mapping)은 딥러닝 모델이 이미지 분류 시 어떤 부분에 주목했는지를 시각적으로 보여줌으로써 예측 결과를 신뢰할 수 있는 시각적 증거를 제공합니다. 이런 특징은 모델의 투명성과 디버깅을 위한 도구로 사용됩니다.
@@ -552,40 +552,30 @@ class PyTorchModelProcessor(private val context:Context) {
         // 분류 결과를 반환
         return if(probability > 0.5) "불법" else "정석"
     }
-
-    // Helper to copy model from assets to internal storage
-    private fun assetFilePath(context: Context, assetName: String): String{
-        val file = File(context.filesDir, assetName)
-        if(!file.exists()){
-
-            try{
-                Log.d(TAG, "Copying $assetName to internal storage")
-                context.assets.open(assetName).use { inputStream ->
-                    FileOutputStream(file).use { outputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-                Log.d(TAG, "File copied to ${file.absolutePath}")
-            }catch (e: Exception) {
-                Log.d(TAG, "Failed to copy asset file")
-                throw RuntimeException("Failed to copy asset file: $assetName", e)
-            }
-        }else{
-            Log.d(TAG, "File already exists at ${file.absoluteFile}        ")
-        }
-        return file.absolutePath
-    }
 }
 ```
 필요한 곳에 <code>PyTorchModelProcessor</code> 인스턴스를 생성하고 용도에 맞게 사용합니다.
 ```kotlin
 private lateinit var modelProcessor: PyTorchModelProcessor
-modelProcessor = PyTorchModelProcessor(this) # Context를 전달하여 인스턴스 초기화
-modelProcessor.loadModel("binary_resnet34_cpu.ptl") # 모델 가져오기
-classificationResult = modelProcessor.classifyImage(bitmap) # 이진 분류 결과 받기
+
+modelProcessor = PyTorchModelProcessor(this) // Context를 전달하여 인스턴스 초기화
+modelProcessor.loadModel("binary_resnet34_cpu.ptl") // 모델 가져오기
+classificationResult = modelProcessor.classifyImage(bitmap) // 이진 분류 결과 받기
 ```
+**분류 결과**
+![KakaoTalk_20241205_015813120_02](https://github.com/user-attachments/assets/d8530590-cc0e-4a23-8a9d-bbe061a288b4)
+![KakaoTalk_20241205_015813120_04](https://github.com/user-attachments/assets/f222f4e0-c90d-4e51-8761-c9ae46c31c7d)
 
 
 # VII. Conclusion & Discussion
 
-위와 같은 과적합 현상의 여러 가장 큰 요인은 데이터 부족으로 판단됩니다. 현재 사용된 약 300장의 데이터로는 학습에 한계가 있으나, 수만 장 이상의 데이터를 확보하여 학습을 진행하면 성능 개선을 기대할 수 있을 것으로 보입니다.
+### 1. 한계점
+* **데이터 부족**: 학습을 위한 데이터가 충분히 많지 않아 일반화에 한계가 있을 수 있습니다. 또한, 특정 지역이나 환경에서 수집된 데이터로 학습한 경우 등 데이터가 평향되는 경우, 다른 환경에서는 모델 성능이 저하될 수 있습니다. 데이터의 다양성을 확보를 위한 추가적인 데이터 수집이 필요합니다. 
+
+* **실시간 처리의 한계**: CPU 환경에서 모델을 실행하는 모바일 디바이스에서 모델 실행 속도가 실제 상황에서 충분히 빠르지 않을 가능성이 있습니다. 이를 해결하기 위해 추가적인 최적화 작업이 필요합니다.
+  
+### 2. 향후 개선 방안
+* **데이터 확장**: 데이터 부족 문제를 해결하기 위해 크라우드소싱, 웹 크롤링, 또는 시뮬레이션을 활용한 이미지 생성 방안을 고려할 수 있습니다. 또한, 다양한 기기와 환경에서 데이터를 수집하여 모델의 일반화를 높일 수 있습니다.
+
+* **데이터 증강(Data Augmentation)**: 기존 데이터에 밝기 조절, 왜곡, 필터 적용 등 추가적인 무작위 변환을 통해 학습 데이터의 다양성을 확대하고, 모델이 다양한 상황에 적응할 수 있도록 합니다.
+
