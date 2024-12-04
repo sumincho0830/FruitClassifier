@@ -227,38 +227,126 @@ torch.save(model.state_dict(), model_save_path)
 ```
 
 # V. Evaluation & Analysis
-### **모델 평가**<br>
 학습에 사용되지 않은 테스트 데이터를 통해 모델의 최종 성능을 평가합니다.
 
+### **1. 모델 로드 및 평가 모드 설정**<br>
+* 저장된 PyTorch 모델 파일(kickboard_resnet34.pth)을 로드합니다.
+* ResNet34의 출력층을 이진 분류용으로 수정한 후, 저장된 가중치를 적용합니다.
+* model.eval(): 모델을 평가 모드로 전환하여 추론 시 불필요한 드롭아웃 레이어 등을 비활성화합니다.
+
 ```python
-# Evaluate the model on test data
-def evaluate_model_on_test(model, test_loader):
-    model.eval()
-    total = 0
-    correct = 0
+# 저장된 모델 경로
+model_load_path = "/content/drive/MyDrive/인공지능2/인공지능2프로젝트/kickboard_resnet34.pth"
 
-    with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    accuracy = 100 * correct / total
-    print(f"Test Accuracy: {accuracy:.2f}%")
-
-# Evaluate on test set
-print("Evaluating on test set...")
-evaluate_model_on_test(model, test_loader)
+# ResNet34 모델 불러오기
+model = models.resnet34(pretrained=False)
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, 2)  # 이진 분류
+model.load_state_dict(torch.load(model_load_path))
+model = model.to(device)
+model.eval()  # 평가 모드로 전환
 ```
+### ** 2. 테스트 이미지 로드 및 평가** <br>
+* 테스트 디렉토리에서 이미지를 순차적으로 불러오고 차례로 전처리를 시행합니다.
+* 전처리를 수행한 후, 모델 입력 형식에 맞게 배치 차원을 추가합니다.
+* 분류 결과를 원본 이미지 위에 표시하여 결과를 직관적으로 확인할 수 있도록 합니다.
+
+```python
+# 이미지 전처리 설정
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+# 이미지를 로드하고 전처리
+def preprocess_image(image_path):
+    # 이미지 로드 및 Exif 메타데이터 기반 회전 수정
+    image = Image.open(image_path)
+    image = ImageOps.exif_transpose(image).convert('RGB')  # Exif 데이터 기반 회전 해결
+    return transform(image).unsqueeze(0)  # 배치 차원 추가
+
+# 테스트 이미지 디렉토리 경로
+image_dir = '/content/drive/MyDrive/인공지능2/인공지능2프로젝트/킥보드사진/train/정석'
+
+# 디렉토리 내 이미지 처리
+classes = ["good", "bad"]
+for image_name in os.listdir(image_dir):
+    image_path = os.path.join(image_dir, image_name)
+
+    # 이미지가 파일인지 확인
+    if os.path.isfile(image_path):
+        try:
+            # 원본 이미지를 로드 (시각화를 위해)
+            original_image = Image.open(image_path)
+            original_image = ImageOps.exif_transpose(original_image)  # Exif 데이터 기반 회전 해결
+
+            # 이미지 전처리 및 예측
+            test_image = preprocess_image(image_path).to(device)
+            with torch.no_grad():
+                output = model(test_image)
+                _, predicted = torch.max(output, 1)
+
+            # 결과 출력
+            result = classes[predicted.item()]
+            print(f"이미지 {image_name} 예측 결과: {result}")
+
+            # 이미지와 결과를 시각적으로 표시
+            plt.imshow(original_image)
+            plt.title(f"Prediction: {result}")
+            plt.axis('off')
+            plt.show()
+
+        except Exception as e:
+            print(f"이미지 {image_name} 처리 중 오류 발생: {e}")
+
+```
+![스크린샷 2024-12-04 195245](https://github.com/user-attachments/assets/a395c91b-9a0d-4bf5-bcf4-e5eac6d38bdd)
+![image](https://github.com/user-attachments/assets/ec633b8b-5547-430c-ab97-61743484d8e0)
+
+
+<br>
+**학습 결과 추이**
+```python
+import matplotlib.pyplot as plt
+
+# Training and validation accuracy lists (example data from your output)
+train_accuracies = [
+    75.49, 92.16, 89.22, 88.24, 88.24, 94.12, 94.12, 96.08, 84.31, 88.24,
+    83.33, 77.45, 88.24, 88.24, 87.25, 87.25, 89.22, 91.18, 95.10, 95.10,
+    95.10, 96.08, 98.04, 97.06, 95.10, 97.06, 96.08, 91.18, 82.35, 86.27
+]
+val_accuracies = [
+    65.38, 50.00, 80.77, 76.92, 73.08, 92.31, 69.23, 80.77, 76.92, 53.85,
+    50.00, 50.00, 65.38, 57.69, 50.00, 50.00, 50.00, 50.00, 57.69, 73.08,
+    73.08, 76.92, 80.77, 100.00, 88.46, 50.00, 80.77, 61.54, 50.00, 69.23
+]
+
+# Plot training and validation accuracy
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 31), train_accuracies, label="Train Accuracy")
+plt.plot(range(1, 31), val_accuracies, label="Validation Accuracy", linestyle="--")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy (%)")
+plt.title("Training and Validation Accuracy Over Epochs")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+```
+![image](https://github.com/user-attachments/assets/78b1eafc-049d-4a27-9a91-82faf08d02a5)
 
 학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)**의 징후가 확인됩니다.
 
-이와 같은 현상의 여러 원인 중 가장 큰 요인은 데이터 부족으로 판단됩니다. 충분한 데이터 확보가 모델의 일반화 성능 향상에 필수적이나, 현재 약 300장의 데이터로는 학습에 한계가 있으며, 단기간 내에 수만 장의 데이터를 확보하는 것은 현실적으로 어려운 상황입니다.
+**Grad-CAM을 활용한 분류 결과 시각화**
+
+
+
+
 
 # VI. Adding PyTorch Model to Android App
 
 # VII. Coclusion & Discussion
 
+위와 같은 과적합 현상의 여러 가장 큰 요인은 데이터 부족으로 판단됩니다. 현재 사용된 약 300장의 데이터로는 학습에 한계가 있으나, 수만 장 이상의 데이터를 확보하여 학습을 진행하면 성능 개선을 기대할 수 있을 것으로 보입니다.
 
