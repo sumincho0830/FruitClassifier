@@ -42,11 +42,11 @@
 2.  **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정, 정규화 등을 통해 모델의 정확도를 최대화하였습니다.<br>
 
 ### **Step by Step Guide**<br>
-1. 라이브러리 불러오기
-   * torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
-   * torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
-   * matplotlib: 데이터 시각화를 위한 라이브러리.
-   * PIL: 이미지 로드 및 전처리를 위한 도구.
+1. **라이브러리 불러오기**
+  * torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
+  * torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
+  * matplotlib: 데이터 시각화를 위한 라이브러리.
+  * PIL: 이미지 로드 및 전처리를 위한 도구.
 
    ```python
    import torch
@@ -57,7 +57,6 @@
    import matplotlib.pyplot as plt
    from PIL import Image
    import os
-
    ```
 
 
