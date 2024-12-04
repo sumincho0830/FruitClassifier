@@ -201,11 +201,39 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 ```
 
 ```python
+# 30 epoch으로 모델 학습
 print("Training started...")
 train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=30)
 ```
 
-### **9. 모델 학습**<br>
+### **9. 모델 저장**<br>
+```python
+model_save_path = "/content/drive/MyDrive/인공지능2/인공지능2프로젝트/kickboard_resnet34.pth"
+torch.save(model.state_dict(), model_save_path)
+```
+
+```python
+# Evaluate the model on test data
+def evaluate_model_on_test(model, test_loader):
+    model.eval()
+    total = 0
+    correct = 0
+
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    accuracy = 100 * correct / total
+    print(f"Test Accuracy: {accuracy:.2f}%")
+
+# Evaluate on test set
+print("Evaluating on test set...")
+evaluate_model_on_test(model, test_loader)
+```
 
 
 
