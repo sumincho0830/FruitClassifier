@@ -13,7 +13,7 @@
 [VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
 
 ### 역할
-양인호 - 데이터 수집 및 전처리, 모델 학습
+양인호 - 데이터 수집 및 전처리, 모델 학습<br>
 조수민 - 모바일 앱 개발 및 모델 적용
 
 # I. Proposal
