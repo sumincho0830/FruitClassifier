@@ -9,12 +9,21 @@
 [III. Methodology](#iii-methodology)<br>
 [IV. Step by Step Guide](#iv-step-by-step-guide)<br>
 [V. Evaluation & Analysis](#v-evaluation--analysis)<br>
-[VI. Conclusion & Discussion](#vi-conclusion--discussion)<br>
+[VI. Adding PyTorch Model to Android App](#vi-adding-pytorch-model-to-android-app)<br>
+[VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
 
 # I. Proposal
 <p>
 최근 전동 킥보드의 불법 주차로 인한 시민 불편 사례가 증가하고 있으며, 이는 공공 안전과 재산 피해의 주요 원인으로 작용하고 있습니다. 특히, 시각장애인용 보도 블록 위에 주차된 킥보드, 좁은 골목이나 인도에 사선으로 주차되어 통행을 방해하는 사례는 보행자와 차량 운전자의 안전을 위협할 뿐만 아니라 자동차 손상 등 재산상의 손해를 초래할 수 있습니다. 그러나 이러한 문제를 효과적으로 규제하거나 해결할 수 있는 명확한 방안은 현재 마련되어 있지 않은 상황입니다.
  </p>
+ 
+ ## Interesting Article: [The Future of AI](https://example.com)
+
+> "Artificial Intelligence is transforming the world by enabling machines to learn and make decisions independently."  
+> — *Excerpt from the article*
+
+[![Read the full article](https://via.placeholder.com/600x200.png?text=The+Future+of+AI)](https://example.com)
+
  <p>
 현행 신고 시스템은 신고자가 사진을 촬영하여 제출하고 관리자가 이를 확인하는 방식으로 이루어지고 있으나, 신고 과정에 많은 시간이 소요되고 개개인의 판단 기준이 명확하지 않아 원활한 신고와 관리가 어렵다는 한계점이 있습니다.
   </p>
@@ -207,10 +216,13 @@ train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=3
 ```
 
 ### **9. 모델 저장**<br>
+
 ```python
 model_save_path = "/content/drive/MyDrive/인공지능2/인공지능2프로젝트/kickboard_resnet34.pth"
 torch.save(model.state_dict(), model_save_path)
 ```
+
+# V. Evaluation & Analysis
 
 ```python
 # Evaluate the model on test data
@@ -234,11 +246,8 @@ def evaluate_model_on_test(model, test_loader):
 print("Evaluating on test set...")
 evaluate_model_on_test(model, test_loader)
 ```
+# VI. Adding PyTorch Model to Android App
 
-
-
-# V. Evaluation & Analysis
-
-# VI. Coclusion & Discussion
+# VII. Coclusion & Discussion
 
 
