@@ -473,7 +473,7 @@ optimized_model._save_for_lite_interpreter("binary_resnet34_cpu.ptl")
 
 ### 2. 안드로이드 앱에 모델 연결
 **2-1. 프로젝트에 모델 추가**<br>
-안드로이드 프로젝트 생성 후 app/main/assets 폴더를 생성한 뒤 모델을 추가합니다.
+안드로이드 프로젝트 생성 후 app/main/assets 폴더를 생성한 뒤 모델을 추가합니다.<br>
 ![image](https://github.com/user-attachments/assets/489b97c2-7145-49d5-ae01-b8350a8df9e8)
 <br>
 
