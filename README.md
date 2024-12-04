@@ -215,6 +215,7 @@ print("Training started...")
 train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=30)
 ```
 ![스크린샷 2024-12-04 195245](https://github.com/user-attachments/assets/a395c91b-9a0d-4bf5-bcf4-e5eac6d38bdd)
+<br>
 
 ### **9. 모델 저장**<br>
 
@@ -332,7 +333,7 @@ plt.show()
 
 ```
 ![image](https://github.com/user-attachments/assets/78b1eafc-049d-4a27-9a91-82faf08d02a5)
-
+<br>
 학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)** 가능성을 확인할 수 있습니다.
 
 ### 3. Grad-CAM을 활용한 분류 결과 시각화
@@ -433,7 +434,9 @@ for image_name in os.listdir(image_dir):
             print(f"이미지 {image_name} 처리 중 오류 발생: {e}")
 ```
 ![image](https://github.com/user-attachments/assets/8016ec2c-68f3-487a-be1e-e3af2ef9f997)
+<br>
 ![image](https://github.com/user-attachments/assets/24146a9d-937a-4fb8-b63a-a1bbd359ac2f)
+<br>
 위와 같이 Grad-CAM을 통해 모델이 인식하는 패턴의 범위를 시각적으로 확인할 수 있습니다.
 
 # VI. Adding PyTorch Model to Android App
@@ -468,8 +471,10 @@ optimized_model._save_for_lite_interpreter("binary_resnet34_cpu.ptl")
 **2-1. 앱에 모듈 추가**
 안드로이드 프로젝트 생성 후 app/main/assets 폴더를 생성한 뒤 모델을 추가합니다.
 ![image](https://github.com/user-attachments/assets/489b97c2-7145-49d5-ae01-b8350a8df9e8)
+<br>
+
 **2-2. PyTorch 디펜던시 추가**
-```groovy
+```kotlin
 dependencies {
     //...
     implementation("org.pytorch:pytorch_android:1.10.0")
