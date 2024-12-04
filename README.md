@@ -439,15 +439,45 @@ for image_name in os.listdir(image_dir):
 # VI. Adding PyTorch Model to Android App
 검증이 완료된 모델은 PyTorch 모듈로 변환하여 안드로이드 앱에서 촬영한 이미지를 판별할 수 있도록 접목합니다. 
 ### 1. TorchScript 모듈 변환 및 저장
-** 1-1. 
-모바일 앱에서는 GPU를 사용하는 CUDA 연산을 지원하지 않는 경우가 있기 때문에 명시적으로 CPU를 사용하도록 변환해줍니다. 
+**1-1. CPU기반 환경에 적합하도록 모델 변환** 
+CPU기반 환경인 모바일 앱에서는 GPU를 사용하는 CUDA 연산을 지원하지 않기 때문에 모델과 데이터(가중치 및 버퍼)를 명시적으로 CPU를 사용하도록 변환해줍니다. 
 ```python
-model.to('cpu')
+model.to('cpu') # 모델을 CPU를 사용하도록 설정
 for param in model.parameters():
-    param.data = param.data.cpu()
-for buffer in model.buffers():
-    buffer.data = buffer.data.cpu()
+    param.data = param.data.cpu() # 모델의 데이터가 CPU와 호환되도록 변환
+for buffer in model.buffers(): 
+    buffer.data = buffer.data.cpu() 
 ```
+**1-2. TorchScript 모델 저장** 
+PyTorch 모델을 TorchScript 형식으로 변환한 후, CPU에서 실행 가능하도록 저장합니다.
+```python
+scripted_model = torch.jit.script(model.cpu())
+scripted_model.save("binary_resnet34_cpu.pt")
+```
+**1-3. PyTorch 모델 최적화 및 내보내기** 
+모바일 환경에서 효율적인 실행을 위해 모델을 최적화 한 뒤 <code>.ptl</code>형식으로 저장하여 PyTorch Lite Interpreter에서 사용할 수 있도록 합니다. 
+```python
+from torch.utils.mobile_optimizer import optimize_for_mobile
+# 모델을 모바일 환경에 최적화
+optimized_model = optimize_for_mobile(scripted_model)
+# Lite Interpreter에서 인식 가능한 형태로 저장
+optimized_model._save_for_lite_interpreter("binary_resnet34_cpu.ptl")
+```
+
+### 2. 앱 내에서 이미지 전처리 및 테스트
+**2-1. 앱에 모듈 추가**
+안드로이드 프로젝트 생성 후 app/main/assets 폴더를 생성한 뒤 모델을 추가합니다.
+![image](https://github.com/user-attachments/assets/489b97c2-7145-49d5-ae01-b8350a8df9e8)
+**2-2. PyTorch 디펜던시 추가**
+```groovy
+dependencies {
+    //...
+    implementation("org.pytorch:pytorch_android:1.10.0")
+    implementation("org.pytorch:pytorch_android_torchvision:1.10.0")
+}
+```
+
+
 
 # VII. Coclusion & Discussion
 
