@@ -39,8 +39,8 @@
 * **안드로이드 앱**: 코틀린 기반의 안드로이드 앱에 TorchScript 모듈을 접목하여 실시간으로 촬영 및 판별이 가능하도록 하였습니다.<br>
 
 ### **개발 과정**<br>
-1.  **데이터 전처리**: 모델 학습에 적절한 224px * 224px의 크기로 이미지를 변환한 뒤 3차원 벡터(Tensor) 형태로 처리하였습니다. <br>
-2.  **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정, 정규화 등을 통해 모델의 정확도를 최대화하였습니다.<br>
+* **데이터 전처리**: 모델 학습에 적절한 224px * 224px의 크기로 이미지를 변환한 뒤 3차원 벡터(Tensor) 형태로 처리하였습니다. <br>
+* **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정, 정규화 등을 통해 모델의 정확도를 최대화하였습니다.<br>
 
 # IV. Step by Step Guide
 ### **1. 라이브러리 불러오기**<br>
@@ -59,6 +59,12 @@
    from PIL import Image
    import os
    ```
+
+### **2. 장치 설정 (GPU/CPU)**<br>
+Colab Pro의 T4 GPU를 활용하여 학습 속도를 가속화합니다. GPU가 없는 경우 CPU를 사용하도록 설정합니다.
+
+```python
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # V. Evaluation & Analysis
