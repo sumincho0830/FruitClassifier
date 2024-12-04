@@ -7,9 +7,10 @@
 [I. Proposal](#i-proposal)<br>
 [II. Dataset](#ii-dataset)<br>
 [III. Methodology](#iii-methodology)<br>
-[IV. Evaluation & Analysis](#iv-evaluation--analysis)<br>
-[V. Related Work](#v-related-work)<br>
-[VI. Conclusion & Discussion](#vi-conclusion--discussion)<br>
+[IV. Step by Step Guide](#iv-step-by-step-guide)<br>
+[V. Evaluation & Analysis](#v-evaluation--analysis)<br>
+[VI. Related Work](#vi-related-work)<br>
+[VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
 
 # I. Proposal
 <p>
@@ -41,12 +42,12 @@
 1.  **데이터 전처리**: 모델 학습에 적절한 224px * 224px의 크기로 이미지를 변환한 뒤 3차원 벡터(Tensor) 형태로 처리하였습니다. <br>
 2.  **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정, 정규화 등을 통해 모델의 정확도를 최대화하였습니다.<br>
 
-### **Step by Step Guide**<br>
-1. **라이브러리 불러오기**
-   * torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
-   * torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
-   * matplotlib: 데이터 시각화를 위한 라이브러리.
-   * PIL: 이미지 로드 및 전처리를 위한 도구.
+# IV. Step by Step Guide
+### **1. 라이브러리 불러오기**<br>
+* torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
+* torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
+* matplotlib: 데이터 시각화를 위한 라이브러리.
+* PIL: 이미지 로드 및 전처리를 위한 도구.
 
    ```python
    import torch
@@ -60,9 +61,9 @@
    ```
 
 
-# IV. Evaluation & Analysis
+# V. Evaluation & Analysis
 
-# V. Related Work
+# VI. Related Work
 
-# VI. Coclusion & Discussion
+# VII. Coclusion & Discussion
 
