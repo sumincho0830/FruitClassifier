@@ -43,10 +43,10 @@
 
 ### **Step by Step Guide**<br>
 1. **라이브러리 불러오기**
-  * torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
-  * torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
-  * matplotlib: 데이터 시각화를 위한 라이브러리.
-  * PIL: 이미지 로드 및 전처리를 위한 도구.
+   * torch: 딥러닝 학습을 위한 PyTorch 라이브러리.
+   * torchvision: 데이터 처리 및 사전 학습된 모델을 로드하는 도구.
+   * matplotlib: 데이터 시각화를 위한 라이브러리.
+   * PIL: 이미지 로드 및 전처리를 위한 도구.
 
    ```python
    import torch
