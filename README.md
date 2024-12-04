@@ -122,9 +122,9 @@ train_loader = DataLoader(train_dataset, batch_size=32, sampler=sampler)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 ```
 ### **7. ResNet34 모델 설정 및 수정**<br>
-* ResNet34 모델 로드: 사전 학습된 ResNet34 모델을 가져옵니다.
-* 출력층 수정: 원래의 출력층을 이진 분류를 위한 Fully Connected (FC) 레이어로 교체합니다.
-장치 설정: 모델을 GPU 또는 CPU로 전송하여 학습 준비를 완료합니다.
+* **ResNet34 모델 로드**: 사전 학습된 ResNet34 모델을 가져옵니다.
+* **출력층 수정**: 원래의 출력층을 이진 분류를 위한 Fully Connected (FC) 레이어로 교체합니다.
+* **장치 설정**: 모델을 GPU 또는 CPU로 전송하여 학습 준비를 완료합니다.
 
 ```python
 model = models.resnet34(pretrained=True)
