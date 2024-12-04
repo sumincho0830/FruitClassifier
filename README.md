@@ -337,17 +337,122 @@ plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/78b1eafc-049d-4a27-9a91-82faf08d02a5)
 
-학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)**의 징후가 확인됩니다.
+학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)** 가능성을 확인할 수 있습니다.
 
-**Grad-CAM을 활용한 분류 결과 시각화**
+### 3. Grad-CAM을 활용한 분류 결과 시각화
+Grad-CAM(Gradient-weighted Class Activation Mapping)은 딥러닝 모델이 이미지 분류 시 어떤 부분에 주목했는지를 시각적으로 보여줌으로써 예측 결과를 신뢰할 수 있는 시각적 증거를 제공합니다. 이런 특징으 모델의 투명성과 디버깅을 위한 도구로 사용됩니다.
+
+**3-1. Grad-CAM 클래스 정의**
+* register_forward_hook: 모델의 forward pass 중 특정 층의 출력(feature map)을 저장.
+* register_backward_hook: backward pass 중 특정 층의 기울기(gradient)를 저장.
+* generate_cam: 저장된 feature map과 gradient를 사용해 활성화 맵(CAM)을 생성.
+```python
+class GradCAM:
+    def __init__(self, model, target_layer):
+        self.model = model
+        self.target_layer = target_layer
+        self.gradients = None
+
+        # Hook 등록
+        target_layer.register_forward_hook(self.save_feature_map)
+        target_layer.register_backward_hook(self.save_gradients)
+
+    def save_feature_map(self, module, input, output):
+        self.feature_map = output
+
+    def save_gradients(self, module, grad_input, grad_output):
+        self.gradients = grad_output[0]
+
+    def generate_cam(self, class_idx):
+        # Grad-CAM 활성화 맵 생성 과정 (생략)
+
+```
+**3-2. 모델 로드 및 Grad-CAM 설정**
+* 모델의 마지막 합성곱 층(layer4[2].conv2)을 Grad-CAM 대상 층으로 지정.
+* Grad-CAM 클래스의 인스턴스를 생성하여 활성화 맵 생성 준비.
+* 기울기와 feature map의 가중합을 통해 활성화 맵 생성.
+* 활성화 맵을 원본 이미지 크기로 조정하고, cv2.applyColorMap을 사용해 색상 히트맵 적용.
+* 히트맵과 원본 이미지를 cv2.addWeighted를 통해 합성.
+```python
+model_load_path = "/content/drive/MyDrive/인공지능2/인공지능2프로젝트/kickboard_resnet34.pth"
+model = models.resnet34(pretrained=False)
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, 2)
+model.load_state_dict(torch.load(model_load_path))
+model = model.to(device)
+model.eval()
+
+# Grad-CAM 설정
+target_layer = model.layer4[2].conv2  # ResNet34의 마지막 합성곱 층
+grad_cam = GradCAM(model, target_layer)
+
+```
+**3-3. Grad-CAM 활성화 맵 생성 및 시각화**
+* Grad-CAM 활성화 맵을 생성하기 위해 모델이 예측한 클래스(class_idx)를 사용.
+* 선택된 클래스의 예측값에 대해 backward를 호출하여 기울기(gradient)를 계산.
+```python
+# 이미지 전처리 함수
+def preprocess_image(image_path):
+    image = Image.open(image_path)
+    image = ImageOps.exif_transpose(image).convert('RGB')
+    return transform(image).unsqueeze(0)
 
 
+def apply_grad_cam(image_path, model, grad_cam):
+    test_image = preprocess_image(image_path).to(device)
 
+    # 모델 예측
+    output = model(test_image)
+    _, predicted = torch.max(output, 1)
+    class_idx = predicted.item()
 
+    # Grad-CAM 활성화 맵 생성
+    model.zero_grad()
+    output[0, class_idx].backward()
+    cam = grad_cam.generate_cam(class_idx)
+
+    # 활성화 맵을 원본 이미지에 오버레이
+    original_image = Image.open(image_path)
+    original_image = ImageOps.exif_transpose(original_image).convert('RGB')
+    original_image = np.array(original_image)
+    cam_resized = cv2.resize(cam, (original_image.shape[1], original_image.shape[0]))
+    heatmap = cv2.applyColorMap(np.uint8(255 * cam_resized), cv2.COLORMAP_JET)
+    overlay = cv2.addWeighted(original_image, 0.5, heatmap, 0.5, 0)
+
+    return predicted.item(), overlay
+
+# 테스트 이미지에 Grad-CAM 적용
+for image_name in os.listdir(image_dir):
+    image_path = os.path.join(image_dir, image_name)
+
+    if os.path.isfile(image_path):
+        try:
+            predicted_class, cam_overlay = apply_grad_cam(image_path, model, grad_cam)
+            print(f"이미지 {image_name} 예측 클래스: {classes[predicted_class]}")
+            plt.imshow(cam_overlay)
+            plt.title(f"Prediction: {classes[predicted_class]}")
+            plt.axis('off')
+            plt.show()
+        except Exception as e:
+            print(f"이미지 {image_name} 처리 중 오류 발생: {e}")
+```
+![image](https://github.com/user-attachments/assets/8016ec2c-68f3-487a-be1e-e3af2ef9f997)
+![image](https://github.com/user-attachments/assets/24146a9d-937a-4fb8-b63a-a1bbd359ac2f)
+위와 같이 Grad-CAM을 통해 모델이 인식하는 패턴의 범위를 시각적으로 확인할 수 있습니다.
 
 # VI. Adding PyTorch Model to Android App
+검증이 완료된 모델은 PyTorch 모듈로 변환하여 안드로이드 앱에서 촬영한 이미지를 판별할 수 있도록 접목합니다. 
+### 1. TorchScript 모듈 변환 및 저장
+** 1-1. 
+모바일 앱에서는 GPU를 사용하는 CUDA 연산을 지원하지 않는 경우가 있기 때문에 명시적으로 CPU를 사용하도록 변환해줍니다. 
+```python
+model.to('cpu')
+for param in model.parameters():
+    param.data = param.data.cpu()
+for buffer in model.buffers():
+    buffer.data = buffer.data.cpu()
+```
 
 # VII. Coclusion & Discussion
 
 위와 같은 과적합 현상의 여러 가장 큰 요인은 데이터 부족으로 판단됩니다. 현재 사용된 약 300장의 데이터로는 학습에 한계가 있으나, 수만 장 이상의 데이터를 확보하여 학습을 진행하면 성능 개선을 기대할 수 있을 것으로 보입니다.
-
