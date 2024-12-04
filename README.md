@@ -1,6 +1,6 @@
 # 모바일 카메라를 활용한 킥보드 불법 주정차 판별
-양인호 정보공학전공 2021074220<br>
-조수민 국제학부 2020031849 
+양인호 정보공학전공 2021074220 - 데이터 수집 및 전처리, 모델 학습<br>
+조수민 국제학부 2020031849 - 모바일 앱 개발 및 모델 적용
 
 ### 목차
 
@@ -11,10 +11,6 @@
 [V. Evaluation & Analysis](#v-evaluation--analysis)<br>
 [VI. Adding PyTorch Model to Android App](#vi-adding-pytorch-model-to-android-app)<br>
 [VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
-
-### 역할
-양인호 - 데이터 수집 및 전처리, 모델 학습<br>
-조수민 - 모바일 앱 개발 및 모델 적용
 
 # I. Proposal
 <p>
