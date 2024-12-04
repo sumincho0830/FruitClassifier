@@ -12,6 +12,10 @@
 [VI. Adding PyTorch Model to Android App](#vi-adding-pytorch-model-to-android-app)<br>
 [VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
 
+### 역할
+양인호 - 데이터 수집 및 전처리, 모델 학습
+조수민 - 모바일 앱 개발 및 모델 적용
+
 # I. Proposal
 <p>
 최근 전동 킥보드의 불법 주차로 인한 시민 불편 사례가 증가하고 있으며, 이는 공공 안전과 재산 피해의 주요 원인으로 작용하고 있습니다. 특히, 시각장애인용 보도 블록 위에 주차된 킥보드, 좁은 골목이나 인도에 사선으로 주차되어 통행을 방해하는 사례는 보행자와 차량 운전자의 안전을 위협할 뿐만 아니라 자동차 손상 등 재산상의 손해를 초래할 수 있습니다. 그러나 이러한 문제를 효과적으로 규제하거나 해결할 수 있는 명확한 방안은 현재 마련되어 있지 않은 상황입니다.
@@ -223,6 +227,8 @@ torch.save(model.state_dict(), model_save_path)
 ```
 
 # V. Evaluation & Analysis
+### **모델 평가**<br>
+학습에 사용되지 않은 테스트 데이터를 통해 모델의 최종 성능을 평가합니다.
 
 ```python
 # Evaluate the model on test data
@@ -246,6 +252,11 @@ def evaluate_model_on_test(model, test_loader):
 print("Evaluating on test set...")
 evaluate_model_on_test(model, test_loader)
 ```
+
+학습 결과에서 Train Accuracy는 90% 이상으로 매우 높은 값을 기록한 반면, Validation Accuracy는 30~70% 사이에서 변동하며 일정하지 않은 경향을 보였습니다. 특히, 학습 정확도가 점차 100%에 근접하는 동안에도 검증 정확도가 크게 개선되지 않는 점에서 **과적합(overfitting)**의 징후가 확인됩니다.
+
+이와 같은 현상의 여러 원인 중 가장 큰 요인은 데이터 부족으로 판단됩니다. 충분한 데이터 확보가 모델의 일반화 성능 향상에 필수적이나, 현재 약 300장의 데이터로는 학습에 한계가 있으며, 단기간 내에 수만 장의 데이터를 확보하는 것은 현실적으로 어려운 상황입니다.
+
 # VI. Adding PyTorch Model to Android App
 
 # VII. Coclusion & Discussion
