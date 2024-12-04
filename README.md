@@ -9,8 +9,7 @@
 [III. Methodology](#iii-methodology)<br>
 [IV. Step by Step Guide](#iv-step-by-step-guide)<br>
 [V. Evaluation & Analysis](#v-evaluation--analysis)<br>
-[VI. Related Work](#vi-related-work)<br>
-[VII. Conclusion & Discussion](#vii-conclusion--discussion)<br>
+[VI. Conclusion & Discussion](#vi-conclusion--discussion)<br>
 
 # I. Proposal
 <p>
@@ -29,6 +28,7 @@
 * **데이터 수집 방법**:
 * * 사용 기기: 휴대폰 카메라 (갤럭시 노트20)
   * 이미지 촬영 기준: 휴대폰 카메라의 3x3 격자의 중하부에 킥보드가 위치하도록 촬영
+  * 이미 다양성: 다양한 무작위 변환(뒤집기, 색조정, 회전 등)을 적용하여 데이터 다양성을 확보
   * 데이터 수: 약 200장의 이미지를 수집한 뒤 모델의 성능 개선을 위하여 100장 중복 (총 300장)
 
 # III. Methodology
@@ -39,7 +39,7 @@
 * **안드로이드 앱**: 코틀린 기반의 안드로이드 앱에 TorchScript 모듈을 접목하여 실시간으로 촬영 및 판별이 가능하도록 하였습니다.<br>
 
 ### **개발 과정**<br>
-* **데이터 전처리**: 모델 학습에 적절한 224px * 224px의 크기로 이미지를 변환한 뒤 3차원 벡터(Tensor) 형태로 처리하였습니다. <br>
+* **데이터 전처리**: 이미지 크기를 모델 학습에 적절한 224px * 224px로 조정한 뒤 3차원 벡터(Tensor)의 숫자값으로 변환해 컴퓨터가 인식할 수 있도록 하였습니다. <br>
 * **모델 성능 최적화**: 다양한 하이퍼파라미터 튜닝 및 batch와 epoch 조정, 정규화 등을 통해 모델의 정확도를 최대화하였습니다.<br>
 
 # IV. Step by Step Guide
@@ -65,11 +65,142 @@ Colab Pro의 T4 GPU를 활용하여 학습 속도를 가속화합니다. GPU가 
 
 ```python
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+```
 
+### **3. 데이터 전처리 및 변환 설정**<br>
+* 이미지를 224x224 크기로 조정.
+* 다양한 무작위 변환(뒤집기, 색조정, 회전 등)을 적용하여 데이터 다양성을 확보.
+* 정규화를 통해 모델 학습 안정화.
+  
+```python
+data_path = '/content/drive/MyDrive/인공지능2/인공지능2프로젝트/킥보드사진/train'
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)), # 이미지 크기 조정
+    transforms.RandomHorizontalFlip(), # 뒤집기
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), # 색 조정
+    transforms.RandomRotation(15), # 회전
+    transforms.ToTensor(), # 텐서 변환
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # 정규화
+])
+
+```
+
+### **4. 데이터셋 로드 및 학습/테스트 데이터 분할**<br>
+데이터를 불러온 뒤 학습용(80%)과 테스트용(20%)으로 나눕니다.<br>
+
+```python
+full_dataset = datasets.ImageFolder(root=data_path, transform=transform)
+
+train_size = int(0.8 * len(full_dataset))
+test_size = len(full_dataset) - train_size
+train_dataset, test_dataset = random_split(full_dataset, [train_size, test_size])
+
+```
+
+
+### **5. 클래스 불균형 조정**<br>
+WeightedRandomSampler를 사용해 학습 데이터셋을 샘플링한 뒤, 데이터가 적은 클래스의 샘플이 더 자주 선택될 수 있도록 조정합니다. 이 과정은 학습 데이터를 균형 있게 제공하여 모델이 특정 클래스에 편향되지 않도록 합니다.
+
+```python
+# 학습 데이터의 라벨 수집
+train_labels = [full_dataset.targets[i] for i in train_dataset.indices]
+# 클래스별 데이터 개수 계산
+class_counts = Counter(train_labels)
+
+#  클래스별 가중치 계산 (샘플이 적은 클래스일수록 높은 가중치 부여)
+class_weights = [1.0 / class_counts[c] for c in range(len(class_counts))]
+# 샘플별 가중치 설정
+sample_weights = [class_weights[label] for label in train_labels]
+# 가중치 기반 샘플링 설정
+sampler = WeightedRandomSampler(sample_weights, num_samples=len(train_dataset), replacement=True)
+```
+### **6. 데이터 로더 생성**<br>
+데이터를 배치 크기(32)로 나누어 모델에 전달할 준비를 합니다.
+```python
+train_loader = DataLoader(train_dataset, batch_size=32, sampler=sampler)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+```
+### **7. ResNet34 모델 설정 및 수정**<br>
+* ResNet34 모델 로드: 사전 학습된 ResNet34 모델을 가져옵니다.
+* 출력층 수정: 원래의 출력층을 이진 분류를 위한 Fully Connected (FC) 레이어로 교체합니다.
+장치 설정: 모델을 GPU 또는 CPU로 전송하여 학습 준비를 완료합니다.
+
+```python
+model = models.resnet34(pretrained=True)
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, 2)  # 이진 분류를 위해 출력층 수정
+model = model.to(device)
+```
+
+### **8. 손실 함수 및 최적화기 정의**<br>
+* 손실 함수: <code>CrossEntropyLoss</code>를 사용해 모델 예측과 실제 값 간의 차이를 계산합니다.
+* 최적화기: Adam 옵티마이저를 사용하여 모델 가중치를 업데이트합니다. 학습률은 0.001로 설정되었습니다.
+
+```python
+criterion = nn.CrossEntropyLoss()  # 손실 함수 설정
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # Adam 옵티마이저
+```
+### **9. 모델 학습 함수 정의**<br>
+1. Training Phase:
+   * 학습 데이터를 사용해 모델을 훈련.
+   * 손실(loss) 계산 후 역전파(backpropagation)와 최적화를 통해 가중치 업데이트.
+   * 학습 정확도 계산.
+     
+2. Validation Phase:
+   * 검증 데이터를 사용해 모델의 성능 평가.
+   * 학습 정확도와 검증 정확도를 출력.
+     <br>
+     
+```python
+# Training loop
+def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=30):
+    model.train()
+    for epoch in range(num_epochs):
+        # Training phase
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        for images, labels in train_loader:
+            images, labels = images.to(device), labels.to(device)
+
+            # Forward pass
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+
+            # Backward pass and optimization
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+        train_accuracy = correct / total * 100
+
+        # Validation phase
+        model.eval()
+        val_correct = 0
+        val_total = 0
+        with torch.no_grad():
+            for images, labels in val_loader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs, 1)
+                val_total += labels.size(0)
+                val_correct += (predicted == labels).sum().item()
+
+        val_accuracy = val_correct / val_total * 100
+        model.train()
+
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}, "
+              f"Train Accuracy: {train_accuracy:.2f}%, Val Accuracy: {val_accuracy:.2f}%")
+```
 
 # V. Evaluation & Analysis
 
-# VI. Related Work
+# VI. Coclusion & Discussion
 
-# VII. Coclusion & Discussion
 
