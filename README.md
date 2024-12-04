@@ -307,6 +307,7 @@ for image_name in os.listdir(image_dir):
 
 <br>
 **학습 결과 추이**
+
 ```python
 import matplotlib.pyplot as plt
 
