@@ -100,7 +100,7 @@ train_dataset, test_dataset = random_split(full_dataset, [train_size, test_size]
 
 
 ### **5. 클래스 불균형 조정**<br>
-WeightedRandomSampler를 사용해 학습 데이터셋을 샘플링한 뒤, 데이터가 적은 클래스의 샘플이 더 자주 선택될 수 있도록 조정합니다. 이 과정은 학습 데이터를 균형 있게 제공하여 모델이 특정 클래스에 편향되지 않도록 합니다.
+<code>WeightedRandomSampler</code>를 사용해 학습 데이터셋을 샘플링한 뒤, 데이터가 적은 클래스의 샘플이 더 자주 선택될 수 있도록 조정합니다. 이 과정은 학습 데이터를 균형 있게 제공하여 모델이 특정 클래스에 편향되지 않도록 합니다.
 
 ```python
 # 학습 데이터의 라벨 수집
@@ -134,20 +134,21 @@ model = model.to(device)
 ```
 
 ### **8. 손실 함수 및 최적화기 정의**<br>
-* 손실 함수: <code>CrossEntropyLoss</code>를 사용해 모델 예측과 실제 값 간의 차이를 계산합니다.
-* 최적화기: Adam 옵티마이저를 사용하여 모델 가중치를 업데이트합니다. 학습률은 0.001로 설정되었습니다.
+* **손실 함수**: <code>CrossEntropyLoss</code>를 사용해 모델 예측과 실제 값 간의 차이를 계산합니다.
+* **최적화기**: Adam 옵티마이저를 사용하여 모델 가중치를 업데이트합니다. 학습률은 0.001로 설정되었습니다.
 
 ```python
 criterion = nn.CrossEntropyLoss()  # 손실 함수 설정
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # Adam 옵티마이저
 ```
-### **9. 모델 학습 함수 정의**<br>
-1. Training Phase:
+### **9. 모델 학습 함수 정의 및 모델 학습**<br>
+지정된 epoch 만큼 학습을 진행하며, 매 epoch마다 학습 손실과 정확도, 검증 정확도를 출력합니다.<br>
+1. **Training Phase:**
    * 학습 데이터를 사용해 모델을 훈련.
    * 손실(loss) 계산 후 역전파(backpropagation)와 최적화를 통해 가중치 업데이트.
    * 학습 정확도 계산.
      
-2. Validation Phase:
+2. **Validation Phase:**
    * 검증 데이터를 사용해 모델의 성능 평가.
    * 학습 정확도와 검증 정확도를 출력.
      <br>
@@ -198,6 +199,15 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}, "
               f"Train Accuracy: {train_accuracy:.2f}%, Val Accuracy: {val_accuracy:.2f}%")
 ```
+
+```python
+print("Training started...")
+train_model(model, train_loader, test_loader, criterion, optimizer, num_epochs=30)
+```
+
+### **9. 모델 학습**<br>
+
+
 
 # V. Evaluation & Analysis
 
