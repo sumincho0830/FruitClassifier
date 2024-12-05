@@ -444,7 +444,7 @@ for image_name in os.listdir(image_dir):
 <br>
 ![image](https://github.com/user-attachments/assets/24146a9d-937a-4fb8-b63a-a1bbd359ac2f)
 <br>
-위와 같이 Grad-CAM을 통해 모델이 인식하는 패턴의 범위를 시각적으로 확인할 수 있습니다.
+위와 같이 Grad-CAM을 통해 모델이 인식하는 패턴의 범위를 시각적으로 확인할 수 있습니다. 결과로 출력된 이미지에서는 모델이 킥보드라는 대상을 제대로 인식하는 것을 볼 수 있습니다.
 
 # VI. Adding PyTorch Model to Android App
 검증이 완료된 모델은 PyTorch 모듈로 변환하여 안드로이드 앱에서 촬영한 이미지를 판별할 수 있도록 접목합니다. 
