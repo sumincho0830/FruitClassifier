@@ -2,7 +2,7 @@
 **양인호 정보공학전공 2021074220** - 데이터 수집 및 전처리, 모델 학습<br>
 **조수민 국제학부 2020031849** - 모바일 앱 개발 및 모델 적용
 
->>[설명 영상 바로가기](https://www.youtube.com/watch?v=e-weeR6qd-0)
+>[설명 영상 바로가기](https://www.youtube.com/watch?v=e-weeR6qd-0)
 >><br>
 
 ### 목차
