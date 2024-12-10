@@ -43,7 +43,7 @@ class PyTorchModelProcessor(private val context:Context) {
 
         // Process the output tensor
         val scores = outputTensor.dataAsFloatArray
-        return if (scores[0] > 0.5) "불법" else "정석"
+        return if(probability >= 0.5) "정석" else "불법"
     }
 
     // Helper to copy model from assets to internal storage
